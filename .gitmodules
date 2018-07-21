@@ -1,3 +1,6 @@
 [submodule "Municipal-E-Governence-Website"]
 	path = Municipal-E-Governence-Website
 	url = https://github.com/Tarun-Karthik/Municipal-E-Governence-Website
+[submodule "Implementation-of-D2TCP-in-ns-3"]
+	path = Implementation-of-D2TCP-in-ns-3
+	url = https://github.com/alconblue/Implementation-of-D2TCP-in-ns-3
