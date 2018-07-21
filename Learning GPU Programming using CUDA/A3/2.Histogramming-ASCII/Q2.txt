@@ -1,0 +1,33 @@
+1) No difficulties
+
+2) Creating a private histogram for each block of threads to reduce the global memory traffic gave the most optimisation
+
+3) __global__ void Histogram(int *deviceInput,int *deviceBins,int inputLength)
+{
+	int row=blockIdx.x*blockDim.x+threadIdx.x;
+	
+	__shared__ int private_histo[128];
+	private_histo[threadIdx.x]=0;
+	__syncthreads();
+	
+	if(row<inputLength)
+	{
+	atomicAdd(&private_histo[deviceInput[row]],1);
+	}
+	__syncthreads();
+	
+	atomicAdd(&deviceBins[threadIdx.x],private_histo[threadIdx.x]);
+}
+
+1 global memory access per thread to access the data element
+
+4) One global memory write by each thread in the second atomicAdd statement
+
+5) Each thread does 2 atomic add operations 
+
+6) The memory contention gets distributed between the private histogram in the shared memory and the public histogram in the global memory.
+   The number of threads contending to write over a private histogram will be limited to the number of threads per block.Thus, the data race
+   is lower. The worst case scenario is when every thread has the same data (95 threads are in contention).
+   
+   However, for the global memory write, the degree of contention is at the most equal to the number of thread blocks. 
+   This is because every thread from every block with the same thread index will acces only one element in the public histogram

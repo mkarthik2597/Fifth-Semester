@@ -1,0 +1,42 @@
+1)
+_global__ void ImageGrayScaleKernel(float* deviceInputImageData,float* deviceOutputImageData,int imageHeight,int imageWidth)
+{
+	int row=blockIdx.y*blockDim.y+threadIdx.y; //2
+	int col=blockIdx.x*blockDim.x+threadIdx.x; //2
+	
+	if(row<imageHeight && col<imageWidth)
+	{
+		int idx=row*imageWidth+col;  //2
+		float r=deviceInputImageData[3*idx]; //1
+		float g=deviceInputImageData[3*idx+1];  //1
+		float b=deviceInputImageData[3*idx+2]; //1
+		
+		deviceOutputImageData[idx] = (0.21f * r + 0.71f * g + 0.07f * b); //5
+	}
+}
+
+There are 14 floating point operations being performed
+
+2) If a color image is to be stored as a 2D array, then we need a colormap of RGB values for each of the pixels in the 2D array.
+   The size of the colormap will atmost be N X 3, if N is the total no. of pixels in the 2D array. Each pixel references a particular
+   index in the colormap and hence there can be many pixels that refer to the same RGB values.
+   
+   Though in the worst case, the memory requirements are the same, the colormap version can give an edge for those images 
+   which do not have high variation in colors across the image. In such a case, the size of the colormap will decrease. The colormap
+   can be loaded on the shared memory and the RGB conversion done on the shared memory.
+   
+   On the contrary, RGB truecolor images (3D) consume more memory , but give high quality inages.
+   Thus, indexed coloring is faster to convert into grayscale in those application where:
+   a) Memory, storage and transmission time are costly
+   b) The quality of the image is not of a very great concern
+   
+3) 3 global memory reads
+4) 1 global memory write
+
+5) A speedup in performance can be achieved by:
+   
+   - Using 2D images with colormaps
+   
+   - Use of shared memory is not required because the RGB values for each pixel is read exactly once. 
+     However, small sized images can be loaded on the constant memory or even shared memory to decrease memory latency.
+

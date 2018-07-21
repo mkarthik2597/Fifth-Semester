@@ -1,0 +1,13 @@
+1) - Used while performing a work-efficient scan algorithm
+   - Sorting algorithms such as radix sort
+   - Polynomial evaluation
+   
+2) Yes, in the following line:
+
+	thrust::device_vector<float> deviceInput(hostInput,hostInput+inputLength);
+	
+3) First, check out the documentation for thrust::reduce
+   Understand the algorithm that has been used for reduction and check if there are any assumptions about the input characteristics
+   (like size, datatype, etc.)
+   Finally, incorporate the necessary changes based on the above learning
+   

@@ -1,0 +1,50 @@
+1) Convolution is used in
+   - Image processing for edge detection, blur filters, smoothing etc.
+   - In statistics, to calculate weighted moving average
+   - In probability theory where the probability distribution 
+     of the sum of two independent random variables is the convolution of their individual distributions.
+	 
+2) Each thread performs O(MaskRadius * MaskRadius) floating point operations
+
+3) Each block of threads reads an image block of dimensions (TILE_WIDTH) * (TILE_WIDTH)
+
+4) Each thread performs one global memory write
+
+5) Minimum: (MaskWidth * MaskWidth)/4 (by the elements at the corners of the image)
+   Maximum: (MaskWidth * MaskWidth) number of operations per thread
+   Average: No. of elements entirely within the image: (ROWS-2)*(COLS-2)
+            No of elements at the boundary: (2*(ROW+COL)) - 4
+			
+			(ROWS-2)*(COLS-2)*(MaskWidth*MaskWidth)+ (2*(ROW+COL)-4)*(MaskWidth*MaskWidth)/4
+			--------------------------------------------------------------------------------
+									ROW*COL
+											
+											
+	If ROW=COL=800, MaskWidth=5
+	
+	Minimum: 25/4 ~ 6
+	Maximum: 25
+	Average: 24.9
+	
+	
+6) As tested for an 8000 x 8000 matrix in the program, the time taken on device is nearly 0.0000s (the C clock function cannot measure
+   greater precision). Time taken on the host is 2.87 seconds. The time taken on the host increases much faster than the time 
+   taken on the GPU (it is O(n*n*n*n) for the host!)
+   
+7) Time taken for overhead calculations: 1.7 seconds. The time taken for memory allocation and copying is a function of O(n*n)
+
+8) As the mask size increases, the number of global memory access will keep increasing, thus eating away the advantage of using a shared memory.
+   Also, since the size of const memory is limited, large sized masks cannot be accommodated in the const memory. They will have to shift to 
+   global memory.
+	 
+9) The convolution cannot run in-place because:
+   - Not all thread blocks read in the data elements at the exact same time.
+   - If it were in place, the values of the elements keep getting changed as and when a thread has finished doing its computation
+   - A thread can therefore read in an ouptut value instead of the input value if the output is dumped before input is taken
+   
+10) A mask in which only the central element is 1 and all other elements is 0 is called an identity mask
+    Eg: 3 X 3 identity mask 
+	
+    0 0 0
+	0 1 0
+	0 0 0

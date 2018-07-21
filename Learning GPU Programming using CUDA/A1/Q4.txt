@@ -1,0 +1,23 @@
+Let the no. of rows and no. of columns be 1000 each
+Total no. of threads = 1000*1000 = 1million
+
+1) Total no. of floating point operations:
+   
+   __global__ void MatrixAddKernel(int* mat1_d, int* mat2_d, int* sum_d, int nrow, int ncol)
+  {
+	int row=blockIdx.y*blockDim.y+threadIdx.y;  -> 2
+	int col=blockIdx.x*blockDim.x+threadIdx.x;  ->2
+	
+	if(row<nrow && col<ncol)  
+	sum_d[row*ncol+col]=mat1_d[row*ncol+col]+mat2_d[row*ncol+col]; -> 4*3 [2 for row*nrow+col, 2 for memory acces]
+	
+  }
+  
+  Total no. of floating point operation per thread=2+2+12=16
+  Total no. of floating point operations=16*1 million = 16 million
+  
+2) No. of global memory reads per thread = 2
+   Total=2*1million = 2 million
+   
+3) No. of global memory writes per thread = 1
+   Total = 1 million

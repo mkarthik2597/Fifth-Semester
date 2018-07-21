@@ -1,0 +1,48 @@
+1) 
+
+__global__ void ImageBlurKernel(float* deviceInputImageData,float* deviceOutputImageData,int imageHeight,int imageWidth)
+{
+	int row=blockIdx.y*blockDim.y+threadIdx.y;  //2
+	int col=blockIdx.x*blockDim.x+threadIdx.x;  //2
+	
+	/*Error checking is required because matrices need not fit in exact tiles*/
+	if(row<imageHeight && col<imageWidth)  
+	{
+	    float pixVal = 0;
+        int pixels = 0;
+		
+		for(int blurrow=-BLUR_SIZE;blurrow<BLUR_SIZE+1;blurrow++)
+		{
+			for (int blurcol = -BLUR_SIZE; blurcol < BLUR_SIZE + 1;blurcol++)
+			{
+				int currow = row + blurrow; //1
+                int curcol = col + blurcol; //1
+				
+				if(currow>-1 && currow<imageHeight && curcol>-1 && curcol<imageWidth)
+				{
+					pixVal+=deviceInputImageData[currow*imageWidth+curcol]; // 3* (2*BLUR_SIZE+1) * (2*BLUR_SIZE+1)
+					pixels++; // (2 * BLUR_SIZE+1)*(2*BLUR_SIZE+1)
+				}
+			}
+		}
+		deviceOutputImageData[row*imageWidth+col]=float(pixVal)/pixels; //3
+	}
+	
+}
+
+The number of floating point operation is of the order O(BLUR_SIZE * BLUR_SIZE)
+
+2) The number of global memory reads is also of the order O(BLUR_SIZE * BLUR_SIZE)
+
+3) There is 1 global memory write per thread
+
+4) The possible optimisations are:
+
+   - The input image can be written on the constant memory rather than on the global memory. Constant memory provides lesser
+     latency and higher bandwidth. However, the size of constant memory is limited (65536 bytes) and cannot hold very large matrices
+	 
+   - The input image can be split into tiles and the tiles can be loaded onto the shared memory. A strong reason for this is that
+     every cell in the tile will atleast use (TILE_WIDTH*TILE_WIDTH)/4 elements (the elements at the corner of the tile).
+	 However, the challenge would be in the coordination of threads among different blocks. A solution has to be found out
+	 to circumvent this issue because threads do not cooperate across blocks.
+	 

@@ -1,0 +1,26 @@
+1) Architecture: Tesla K40m
+   Compute capability: 3.5
+   
+2) Maximum block dimension:(1024,1024,64)
+   Maximum threads per block=1024
+
+3) Maximum number of threads that can be launched=65535*512=33,553,920 threads
+
+4) The number of threads that should be spawned in the kernel depends upon the size of the data that the threads operate on.
+   For e.g., addition of 2 1-dimensional arrays, each containing 4 elements requires only 4 threads. Each thread will perform one addition operation.
+   The remaining threads which are spawned do not execute the kernel code. Also, thread creation and termination will consume some time,
+   causing unnecessary performance losses
+	   
+5) The number of threads that can be launched depends on the number of resources used by each thread. SMs have finite resources of threads and
+   local memory. If the amount of resources used per thread is high, we may not be able to hit the theoretical maximum no. of threads.
+
+6) Shared memory is the memory allocated per thread block, so all threads in a block have access to the same shared memory.
+   Shared Memory per block: 49152 bytes
+   
+7) Global memory refers to the total amount of DRAM on the GPU. On Tesla K40, it is approximately 12GB
+
+8) Constant memory on a CUDA device stores read only data. On this device, amount of constant memory is 65536 bytes
+
+9) The warp size is the number of threads running concurrently on a streaming multiprocessor (SM). The warp size is 32.
+
+10) Yes, Tesla K40 supports double precision.

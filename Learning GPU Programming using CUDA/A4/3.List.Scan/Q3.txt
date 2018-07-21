@@ -1,0 +1,22 @@
+1) - String comparison and lexical analysis
+   - Solving recurrences and tree operations
+   - Sparse matrices, histograms
+   
+2) 2*(log BLOCK_SIZE) Floating operations are being performed.
+
+3) 2 Global reads.
+
+4) 2 Global Writes.
+
+5) Avg = Min= Max. i.e. Each thread has to perform 2*log(BLOCK_SIZE) operations.
+
+7)Use of shared memory to optimize the performance.
+
+8) Hillis Steele scan(a step efficient algorithm) can be used to obtain more efficient step complexity (O(logn)).
+
+9) If input is very large then break it into several parts and the compute an intermediate
+   scan for each of the part then perform scan on intermediate scan generated.
+
+10) Commutativity is not necessary.
+
+11) No

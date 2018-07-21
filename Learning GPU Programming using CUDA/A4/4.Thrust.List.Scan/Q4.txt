@@ -1,0 +1,12 @@
+a) 
+1. to build faster algorithms for polynomial interpolation
+2. to construct grey codes
+3. to emulate parallel algorithms that assume the ability for multiple processors to access the same
+   memory cell at the same time, on parallel machines that forbid simultaneous access.
+   
+b)As long as the binary operator is associative, we can use parallel scan.Commutativity is not a
+mandatory property.
+
+c)It is possible that the output in serial and parallel versiuons of reductions vary. If threads in
+parallel code are not synchronized, it will lead to race condition making the output different from
+expected. To avoid this, One should use Atomics or __syncThreads().

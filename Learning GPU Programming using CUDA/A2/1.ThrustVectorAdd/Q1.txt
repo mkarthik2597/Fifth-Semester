@@ -1,0 +1,11 @@
+Let the no. of elements in the vectors be n
+
+1) n addition operations are being performed 
+2) 2n global memory reads are being performed
+3) n global memory writes are performed
+4) Thrust made implementation of CUDA vector addition because:
+   - High similarity to C++ STL
+   - Provides a high level abstraction in that it hides the memory allocation (cudaMalloc)
+     and memory copy (cudaMemcpy) from the programmer, thus simplifying his work
+   - Provides inbuilt function for most of the common operations. Programmers can use these
+     APIs to save time in CUDA programming and write efficient CUDA programs at the same time  

@@ -1,0 +1,15 @@
+1) Yes, in the following line:
+
+  thrust::device_vector<unsigned int> deviceInput(hostInput,hostInput+inputLength);
+
+2) Sorting: O(nlogn)
+   Cumulative histogram (Essentially does binary search for every elemnt):  O(n*logn)
+   Adjacent difference: O(n)
+   
+   Total: O(nlogn)
+   
+3) O(n) for read, updation in private histogram and write on the global histogram
+
+4) Histogram sort is done when the number of histogram bins is larger than the size of input data. 
+   For eg, in the given question, the number of bins is 128, but the data size is only 11. 
+   

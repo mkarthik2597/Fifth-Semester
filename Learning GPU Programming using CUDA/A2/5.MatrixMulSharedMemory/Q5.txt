@@ -1,0 +1,84 @@
+1)
+
+__global__ void MatrixProductKernel(int* mat1_d, int* mat2_d, int* product_d, int nROW, int nCOL,int m)
+{
+	int row=blockIdx.y*blockDim.y+threadIdx.y; //2
+	int col=blockIdx.x*blockDim.x+threadIdx.x; //2
+	
+	__shared__ int mat1_ds[32][32];
+	__shared__ int mat2_ds[32][32];
+	
+	if(row<nROW && col<nCOL)
+	{
+		int product=0;
+		for(int i=0;i<(float)m/blockDim.x;i++)
+		{
+			mat1_ds[threadIdx.y][threadIdx.x]=mat1_d[row*m+i*blockDim.x+threadIdx.x]; //      4*m/TILE_WIDTH
+			mat2_ds[threadIdx.y][threadIdx.x]=mat2_d[(i*blockDim.y+threadIdx.y)*nCOL+col]; // 4*m/TILE_WIDTH
+			__syncthreads();
+			
+			for(int j=0;j<blockDim.x;j++)
+			if(j<m)
+			product+=mat1_ds[threadIdx.y][j]*mat2_ds[j][threadIdx.x]; // 2*m
+			__syncthreads();
+			
+		}
+		product_d[row*nCOL+col]=product;		
+	}	
+}
+
+No. of floating point operations = O(m)
+
+2) Total no. of global memory reads = O(m/TILE_WIDTH)
+
+3) 1 global memory write
+
+4) Further possible optimisations are:
+   
+   - Even though the tiles of the input matrices are loaded onto the shared memory collectively by all the threads in a block,
+     each thread single-handedly calculates the inner product for one cell of the product matrix. 
+	 The calculation of the inner product itself exhibits data parallelism and the inner product of two vectors of size m 
+	 can indeed be performed in parallel by m threads.This will require us to define another kernel for doing the inner product 
+	 of the two vectors.
+	 
+5) Implementation difficulties:
+
+   - Arriving at an expression for the column index and the row index of the mat1_d and mat2_d matrices respectively
+   - Declaration of shared memory cannot simply be done as "__shared__ int mat1_ds[TILE_WIDTH][TILE_WIDTH];"
+     This is because the dimensions of the shared memory need to be specified as constants. You can either pass
+	 TILE_WIDTH as a const-parameter or hard-code the TILE_WIDTH value in the declaration itself (as "__shared__ int mat1_ds[32][32];")
+   - If the no. of column in mat1 (= no of rows in mat2) is not a multiple of TILE_WIDTH, the algorithm will erroneously compute
+     the product matrix elements. To counter this, the following condition was used
+	 
+	 	    if(j<m)
+			product+=mat1_ds[threadIdx.y][j]*mat2_ds[j][threadIdx.x];
+	
+	- The algorithm will not work if either nROW or nCOL is not a multiple of TILE_WIDTH. The way the algorithm works is that each 
+	  cell of a tile in the product matrix will load the corresponding element in mat1 and mat2 into the shared memory. If nCOL or nROW 
+	  is not a multiple of TILE_WIDTH, there will not be sufficient threads (when the tile in product matrix is at the 
+	  edges/corners of the product matrix) to load the tiles of mat1 and mat2.
+	 
+6) If the matrix dimensions are bigger than the thread dimensions, we do tiled matrix multiplication.
+   We start using block dimensions together with the thread dimensions in determining the row and column index
+   
+   	int row=blockIdx.y*blockDim.y+threadIdx.y;
+	int col=blockIdx.x*blockDim.x+threadIdx.x;
+	
+7) Matrix multipication can be achieved using the divide and conquer algorithmic paradigm also. 
+   We need to split the input matrices M and N as:
+     M       N
+	---     ---
+	
+   M0 M1   N0 N1
+   M2 M3   N2 N3 
+   
+   Next, we compute the product as :
+   
+          M * N
+		 -------
+   
+   M0N0 + M1N2    M0N1 + M1N3
+   M2N0 + M3N2    M2N1 + M3N3
+   
+   The recursive division can be carried out till the matrices become small enough to be loaded on the global memory from the host memory.
+   However, the algorithm will work only for square matrices

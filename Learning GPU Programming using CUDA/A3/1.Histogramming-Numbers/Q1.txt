@@ -1,0 +1,39 @@
+1) Device properties of Tesla K40m:
+
+	Total amount of constant memory:65536 bytes
+	No. of threads per SM <= 1024 and No. blocks per SM <=8
+	(15) SM, (192) SP per SM: Total->2880 CUDA Cores
+	
+	For full utilisation of the CUDA device, the following optimisations were done:
+	(i) Each thread block contains 1024 threads so that an SM has suufficient work to do to hide latency
+	(ii) The input data was transferred onto constaint memory to leverage the high bandwidth, low latency and caching of constant memory
+   
+2) I found no difficulties
+
+3) The data set here has a size of 48,000 bytes which is sufficient to be held in the constant memory. However, for larger
+   dimensions, the data needs to be stored in the global memory. Thus, the maximum optimisation is given by ensuring that the SMs are fully occupied
+   so that they can hide latency
+   
+4) __global__ void Histogram(const int * __restrict__ deviceInput,int *deviceBins,int inputLength)
+{
+	int row=blockIdx.x*blockDim.x+threadIdx.x;
+	deviceBins[row]=0;
+	
+	if(row<inputLength)
+	{
+		int element=deviceInput[row];
+		if(deviceBins[element]<BIN_CAP)
+	    atomicAdd(&deviceBins[element],1);
+	}
+}
+
+2 global memory reads per thread: One to read the data and the second one to check overflow
+
+5) 2 global memory writes per thread (Filling device bins with 0,the atomicAdd statement)
+
+6) Each thread performs one atomic add operation
+
+7) The contention will be the maximum as this is the worst case scenario, where all threads compete to write over the same bin
+
+8) A random value for each array element will drastically reduce the contention on an average, becaause if the random values
+   are all the same, we have the worst case and if they are all different, we have the best case.

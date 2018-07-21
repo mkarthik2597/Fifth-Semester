@@ -1,0 +1,28 @@
+1)
+
+__global__ void MatrixAddKernel(int* mat1_d, int* mat2_d, int* product_d, int nROW, int nCOL,int m)
+{
+	int row=blockIdx.y*blockDim.y+threadIdx.y; //2
+	int col=blockIdx.x*blockDim.x+threadIdx.x; //2
+	
+	/*Error checking is required because matrices need not fit in exact tiles*/
+	if(row<nROW && col<nCOL)  
+	{
+		int product=0;
+		for(int k=0;k<m;k++)
+		product+=mat1_d[row*m+k]*mat2_d[k*nCOL+col]; // 6*m
+		product_d[row*nCOL+col]=product; //2
+	} 
+	
+}
+
+The number of floating point operations is of the order O(m)
+
+2) 2m global memory reads
+3) 1 global memory write
+
+4) Matrix multiplication can be optimised by splitting the input matrices into tiles and loading the tiles on the 
+   shared memory. As implemented in the next assignment question, this form of dense tiled matrix muliplication 
+   works because of data locality. The reduction in global memory accesses is by the TILE_WIDTH factor.
+   Thus, the CGMA ratio (Compute to Global Memory Access) increases by TILE_WIDTH times.
+   
